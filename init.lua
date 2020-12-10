@@ -1,21 +1,33 @@
 poi_namefilter = {}
 poi_categories = {}
 
--- Load support for intllib.
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
-
-dofile(minetest.get_modpath(minetest.get_current_modname()) .. "/namefilter.lua")   -- avoid servercrash loop if someone decided to rename the modfolder !
-dofile(minetest.get_modpath(minetest.get_current_modname()) .. "/categories.lua")
-
 local storage = minetest.get_mod_storage()  -- initalize storage file of this mod. This can only happen here and should be always local
-local poi = {
+poi = {
 
 	points = {},
 	filter = {},
 	categories = {},
 	modpath = minetest.get_modpath(minetest.get_current_modname()),
+    modname = minetest.get_current_modname()
 }
+
+-- Load support for intllib.
+local S
+
+if(minetest.get_modpath("intllib")) then
+    S = dofile(poi.modpath .."/intllib.lua")
+    print("[MOD] " .. poi.modname .. ": translating in intllib-mode.")
+    
+else
+    S = minetest.get_translator(poi.modname)
+    print("[MOD] " .. poi.modname .. ": translating in minetest-mode.")
+    
+end -- if(minetest.get_modpath(
+
+poi.get_translator = S
+
+dofile(poi.modpath .. "/namefilter.lua")   -- avoid servercrash loop if someone decided to rename the modfolder !
+dofile(poi.modpath .. "/categories.lua")
 
 -- Options for Print_Message
 local log = 0
@@ -330,7 +342,7 @@ function poi.gui(player_name, showup, main)
 	    call_list[count] = key  -- makes it easier to find jump point
 	  else
 	    drop_down = poi.get_categorienumber(showup)
-	    --showcat = "label[0.6,0.4;Categorie is : "..showup.."]" -- show choosen categorie in gui ##not needed anymore 
+	    --showcat = "label[0.6,0.4;Category is: "..showup.."]" -- show choosen categorie in gui ##not needed anymore 
 	    if poi.get_categorienumber(showup) == cat then
 	      if list == "" then
 	   
@@ -349,21 +361,21 @@ function poi.gui(player_name, showup, main)
 	end -- for key,value
 
 	if minetest.get_player_privs(player_name).poi then
-	    manageme = "button[5,6.5;2,1;poimanager;" .. S("Manage_PoI]")
+	    manageme = "button[5,6.5;2,1;poimanager;" .. S("Manage PoI") .. "]"
 	end
 		
 	if main then
 	      minetest.show_formspec(player_name,"minetest_poi:thegui",                            -- The main gui for everyone with interact
 				      "size[7,8]" ..
-				      "label[0.4,0;> ".. S("Doubleclick on destination to teleport") .. " <]"..
+				      "label[0.4,0;> ".. S("Double-click on destination to teleport") .. " <]"..
 				      --showcat..
 				      "textlist[0.4,1;3,5;name;"..list..";selected_idx;false]"..
-				      "label[0.6,6;".. count .. S(" Points in List]") ..
-				      "label[4.3,0.5; ".. S("Categories ]") ..
+				      "label[0.6,6;".. count .. S(" points in list") .. "]" ..
+				      "label[4.3,0.5; ".. S("Categories") .. " ]" ..
 				      "dropdown[4,1;2,1;dname;"..catlist..";"..drop_down.."]"..
-				      "button[0.4,6.5;1,1;poitelme;".. S("Go]") ..
-				      "button[1.4,6.5;2,1;poishowall;" .. S("ShowAll]") ..manageme..
-				      "button_exit[0.4,7.4;3.4,1;poiexit;" .. S("Quit]")
+				      "button[0.4,6.5;1,1;poitelme;".. S("Go") .. "]" ..
+				      "button[1.4,6.5;2,1;poishowall;" .. S("Show all") .. "]" ..manageme..
+				      "button_exit[0.4,7.4;3.4,1;poiexit;" .. S("Quit") .. "]"
 				      )
 	else
 	      minetest.show_formspec(player_name,"minetest_poi:manager",                            -- The management gui for people with poi priv
@@ -372,7 +384,7 @@ function poi.gui(player_name, showup, main)
 				      "textlist[4,0;2,2;madname;"..catlist..";"..selected_category..";false]".. 
 				      "button[4,2.5;2,1;reload;" .. S("Reload") .. "]" ..
 				      "button[4,3.5;2,1;validate;" .. S("Validate") .. "]"..
-				      "field[0.3,5.4;7,1;managename;                                                                                      - enter name -;"..selected_point.."]"..
+				      "field[0.3,5.4;7,1;managename;                                                                                      - ".. S("Enter Name").." -;"..selected_point.."]"..
 				      "button[0.4,6;6,1;set;" .. S("Set Point or change Categorie") .. "]"..
 				      "button[0.4,7;2,1;rename;" .. S("Rename") .. "]"..
 				      "button[2.4,7;2,1;move;" .. S("Move") .. "]"..
@@ -946,7 +958,7 @@ minetest.register_chatcommand("poi_gui", {
 })
 minetest.register_chatcommand("poi_list", {
 	params = S("<-a> <-c> <-f> <-i [Categorie[Number]]>"),
-	description = S("Shows Point's of Interest.\nOption -a shows Point's of Interest with Coordinates.\nOption -c shows you Categories.\nOption -f shows you the Namefilter\nOption -i <Categorie[number]]> shows only the Entries of the given Categorienumber or Name"),
+	description = S("Shows Point's of Interest.\nOption -a shows Point's of Interest with Coordinates.\nOption -c shows you Categories.\nOption -f shows you the Namefilter\nOption -i <Categorie[number]> shows only the Entries of the given Categorienumber or Name"),
 	privs = {interact = true},
 	func = function(name, arg)
 
